@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { fetchOrders, deleteOrder, updateQuantity, getFilteredOrders } from '../slices/orderSlice';
 import { useSelector, useDispatch } from 'react-redux';
+import debounce from 'lodash/debounce';
+import { useCallback, useMemo } from 'react';
 
 const OrdersPage = () => {
     const dispatch = useDispatch();
@@ -40,16 +42,30 @@ const OrdersPage = () => {
     }, [name, filterDate]);
 
     // Filter orders based on name and date
-    const handleFilterOrders = () => {
-        if (name || filterDate) {
-            dispatch(getFilteredOrders({ name, filterDate })).then(() => {
 
-            }).catch((error) => {
-                console.error('Error fetching filtered orders:', error);
-            });
-        }
-    };
+    const debouncedHandleFilterOrders = useMemo(() =>
+        debounce((name, filterDate, dispatch) => {
+            if (name || filterDate) {
+                dispatch(getFilteredOrders({ name, filterDate }))
+                    .catch(error => {
+                        console.error('Error fetching filtered orders:', error);
+                    });
+            }
+        }, 500), // 500ms debounce delay
+        []
+    );
 
+    // Use a callback wrapper to call the debounced function
+    const handleFilterOrders = useCallback(() => {
+        debouncedHandleFilterOrders(name, filterDate, dispatch);
+    }, [name, filterDate, dispatch, debouncedHandleFilterOrders]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            debouncedHandleFilterOrders.cancel();
+        };
+    }, [debouncedHandleFilterOrders]);
 
     // Update order quantity
     const handleUpdateQuantity = (orderId) => {
