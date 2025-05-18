@@ -51,7 +51,7 @@ const OrdersPage = () => {
                         console.error('Error fetching filtered orders:', error);
                     });
             }
-        }, 500), // 500ms debounce delay
+        }, 500), 
         []
     );
 
