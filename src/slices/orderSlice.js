@@ -6,6 +6,7 @@ const token = localStorage.getItem('adminToken');
 // Async thunks
 export const fetchOrders = createAsyncThunk('orders/fetchOrders', async (_, thunkAPI) => {
     try {
+        const token = localStorage.getItem("adminToken");
         const response = await axios.get('http://localhost:5000/orders', {
             headers: { Authorization: `Bearer ${token}` }
         });
